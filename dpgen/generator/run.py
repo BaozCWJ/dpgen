@@ -1305,7 +1305,7 @@ def make_model_devi(iter_index, jdata, mdata):
                     type_map=jdata["type_map"],
                 )
                 if shuffle_poscar:
-                    system.data["coords"] = rng.permuted(system.data["coords"], axis=1)
+                    rng.shuffle(system.data["coords"], axis=1)
                 if jdata.get("model_devi_nopbc", False):
                     system.remove_pbc()
                 system.to_lammps_lmp(os.path.join(conf_path, lmp_name))
@@ -2477,7 +2477,6 @@ def _select_by_model_devi_adaptive_trust_low(
     for tt in modd_system_task:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            model_devi = np.loadtxt(os.path.join(tt, "model_devi.out"))
             model_devi = _read_model_devi_file(
                 tt, model_devi_f_avg_relative, model_devi_merge_traj
             )
@@ -4524,8 +4523,9 @@ def post_fp_cp2k(iter_index, jdata, rfailed=None):
             _sys = dpdata.LabeledSystem(
                 oo, fmt="cp2kdata/e_f", type_map=jdata["type_map"]
             )
-            all_sys.append(_sys)
-            icount += 1
+            if len(_sys) > 0:
+                all_sys.append(_sys)
+                icount += 1
 
         if (all_sys is not None) and (len(all_sys) > 0):
             sys_data_path = os.path.join(work_path, f"data.{ss}")
